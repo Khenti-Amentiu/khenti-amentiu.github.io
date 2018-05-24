@@ -121,18 +121,30 @@
 
 		Board.levels = [
 			'02000000001001001001001001011001001',
-			'00020001202005101202101101002045001'    //15
+			'02000000001002001002022002011002001',    //25
+			'02000000006006006006006006006006006',    //??
+			'02000000001001001003003001023003011',    //27
+			'02000000004004004004001004004004004', 	  //26
+			'02000000004004004026006046002002002',	  //24
+			'02000000045001001004005001004004015',    //
+			'02000000003003001022013001002003003',    //30
+			'02000000002006002006044006004022004',    //27
+			'02000000044002001004022001004002011',    //17
+			'02000000022002006002006006046006011',    //25
+			'02000000002005001022011001002045001',    //25
+			'02000000004001001026006001011006044',    //23
+			'02000000044004004022013003002002003',    //27
 		];
 
 		Board.colors = [
 			{name: 'white', madeBy: [0]},
-			{name: 'blue', madeBy: [1]},
-			{name: 'yellow', madeBy: [2]},
-			{name: 'green', madeBy: [1,2]},
-			{name: 'red', madeBy: [4]},
-			{name: 'purple', madeBy: [4,1]},
-			{name: 'orange', madeBy: [4,2]},
-			{name: 'brown', madeBy: [1,2,4]},
+			{name: 'blue', madeBy: [0,1]},
+			{name: 'yellow', madeBy: [0,2]},
+			{name: 'green', madeBy: [0,1,2,3]},
+			{name: 'red', madeBy: [0,4]},
+			{name: 'purple', madeBy: [0,1,4,5]},
+			{name: 'orange', madeBy: [0,2,4,6]},
+			{name: 'brown', madeBy: [0,1,2,4,7]},
 		];
 
 		Board.prototype.Init = function(cellValues) {
@@ -195,23 +207,23 @@
 				var bottomSide = this.cubeSides[1];
 
 				if (cubeCell.paint > 0 && !Board.colors[bottomSide].madeBy.includes(cubeCell.paint)) {
-					bottomSide += cubeCell.paint;
+					bottomSide |= cubeCell.paint;
 				}
 
-				if (bottomSide != 0) {
-					if  (cubeCell.target != bottomSide && !Board.colors[cubeCell.target].madeBy.includes(bottomSide)) {
-						if (showGameOver)
-							alert("game over");
+				if  (bottomSide != 0 && cubeCell.target != bottomSide && !Board.colors[cubeCell.target].madeBy.includes(bottomSide)) {
+					if (showGameOver)
+						alert("game over");
 
-						return false;
-					} else {
-						if (!Board.colors[cubeCell.color].madeBy.includes(bottomSide)) {
-							cubeCell.color = bottomSide;
-						}
+					return false;
+				} else {
 
-						this.cubeSides[1] = bottomSide;
-						cubeCell.paint = 0;
+
+					if (!Board.colors[cubeCell.color].madeBy.includes(bottomSide)) {
+						cubeCell.color |= bottomSide;
 					}
+
+					this.cubeSides[1] = bottomSide;
+					cubeCell.paint = 0;
 				}
 			} 
 
@@ -367,7 +379,7 @@
 			}
 
 			alert('This puzzle has no possible solution');
-			
+
 			return false;
 		}
 
