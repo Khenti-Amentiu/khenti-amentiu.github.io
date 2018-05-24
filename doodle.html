@@ -25,32 +25,34 @@
 				position:relative;
 				
 				transform: rotateX(10deg) rotateY(-70deg);
-				top: -53px; left: 35px;
+				top: -45px; left: 25px;
 			}
 
 			.cube div {
 				position: absolute;
-				width: 100px;
-				height: 100px;
+				width: 80px;
+				height: 80px;
 				border: 2px black solid;
 
 			}
 
-			.top {
-				transform: rotateY(-270deg) translateX(50px);
+			div.top {
+				transform: rotateY(-270deg) translateX(40px) translateZ(64px) translateY(-4px);
 				transform-origin: top right;
 				z-index: -4;
 			}
 
-			.right {
+			div.right {
 				transform: rotateX(90deg) translateY(50px);
 				transform-origin: bottom center;
 								z-index: -4;
+								width: 160px;
 
 			}
-			.left {
+			div.left {
 				transform: translateZ(50px);
-								z-index: -4;
+				z-index: -4;
+				width: 160px;
 
 			}
 
@@ -69,6 +71,7 @@
 			#solver {
 				border-collapse: collapse;
 				border: 1px gray;
+				width: 400px;
 			}
 
 			#solver tr {
@@ -83,18 +86,32 @@
 				background: green;
 				color: white;
 			}
+
+			button {
+				padding: 10px;
+			}
+
+			input {
+				padding: 10px;
+			}
+
 		</style>
 	</head>
 	<body>
 		<form>
+		    <p>Click on any square to:<p>
 			<input type="radio" name="mode" id="playMode" checked><label for="playMode">Play</label>
 			<input type="radio" name="mode" id="changeTarget"><label for="playMode">Change Target</label>
 			<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Bucket</label>
 			<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Color</label>
 			<input type="radio" name="mode" id="changePosition"><label for="playMode">Change Position</label>
+
+
 		</form>
 
-		Level hash: <input id="hash"> <button onclick="loadHash()">load</button> <button onclick="solveBoard()">solve</button>
+		Level hash: <input id="hash"> <button  onclick="loadHash()">load</button> <button style="background: green; color: white;" onclick="solveBoard()">solve</button>
+
+		<p>You can use this hash to share the level you make via url, like this <a href="?hash=02000000044002001004022001004002011">level 10, which has a 17 moves solution!</a></p>
 		<table>
 			<tr>
 				<td>
@@ -126,7 +143,7 @@
 			'02000000001001001003003001023003011',    //27
 			'02000000004004004004001004004004004', 	  //26
 			'02000000004004004026006046002002002',	  //24
-			'02000000045001001004005001004004015',    //
+			'02000000045001001004005001004004015',    //28
 			'02000000003003001022013001002003003',    //30
 			'02000000002006002006044006004022004',    //27
 			'02000000044002001004022001004002011',    //17
@@ -137,14 +154,14 @@
 		];
 
 		Board.colors = [
-			{name: 'white', madeBy: [0]},
-			{name: 'blue', madeBy: [0,1]},
-			{name: 'yellow', madeBy: [0,2]},
-			{name: 'green', madeBy: [0,1,2,3]},
-			{name: 'red', madeBy: [0,4]},
-			{name: 'purple', madeBy: [0,1,4,5]},
-			{name: 'orange', madeBy: [0,2,4,6]},
-			{name: 'brown', madeBy: [0,1,2,4,7]},
+			{name: 'white', id: 0},
+			{name: 'blue', id: 1},
+			{name: 'yellow', id: 2},
+			{name: 'green', id: 3},
+			{name: 'red', id: 4},
+			{name: 'purple', id: 5},
+			{name: 'orange', id: 6},
+			{name: 'brown', id: 7},
 		];
 
 		Board.prototype.Init = function(cellValues) {
@@ -185,6 +202,9 @@
 			return this.cells[this.cubeRow][this.cubeColumn].value;
 		}
 
+		Board.prototype.isColorContainedIn = function(colorContained, colorContainer) {
+			return (colorContainer | colorContained) == colorContainer;
+		}
 
 		Board.prototype.moveCube = function(newRow, newColumn, showGameOver) {
 			var deltaRow = newRow - this.cubeRow;
@@ -206,19 +226,20 @@
 
 				var bottomSide = this.cubeSides[1];
 
-				if (cubeCell.paint > 0 && !Board.colors[bottomSide].madeBy.includes(cubeCell.paint)) {
+				if (cubeCell.paint > 0 && !this.isColorContainedIn(cubeCell.paint, bottomSide)) {
 					bottomSide |= cubeCell.paint;
 				}
 
-				if  (bottomSide != 0 && cubeCell.target != bottomSide && !Board.colors[cubeCell.target].madeBy.includes(bottomSide)) {
-					if (showGameOver)
+				if  (bottomSide != 0 && cubeCell.target != bottomSide && !this.isColorContainedIn(bottomSide, cubeCell.target)) {
+					if (showGameOver) {
 						alert("game over");
+					}
 
 					return false;
 				} else {
 
 
-					if (!Board.colors[cubeCell.color].madeBy.includes(bottomSide)) {
+					if (!this.isColorContainedIn(bottomSide, cubeCell.color)) {
 						cubeCell.color |= bottomSide;
 					}
 
