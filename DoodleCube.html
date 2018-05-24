@@ -1,0 +1,509 @@
+<html> 
+	<head>
+		<style>
+			#table {
+				text-align: center;
+				transform: rotate(-45deg);
+				margin: 200px;
+			}
+
+			#table td {
+				border: black 5px solid;
+				width: 200px;
+				height: 200px;
+				margin:2px;
+				position: relative;
+				
+			}
+
+			td.targetblue {
+				border-color: blue;
+			}
+
+			.cube {
+				transform-style: preserve-3d;
+
+				position:relative;
+				
+				transform: rotateX(10deg) rotateY(-70deg);
+				top: -50px; left: 50px;
+			}
+
+
+
+
+.top {
+	transform: rotateY(-270deg) translateX(50px);
+	transform-origin: top right;
+}
+
+.right {
+	transform: rotateX(90deg) translateY(50px);
+	transform-origin: bottom center;
+}
+.left {
+	transform: translateZ(50px);
+}
+
+.cube div {
+	position: absolute;
+	width: 100px;
+	height: 100px;
+	border: 1px black solid;
+
+}
+
+.paint {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	width: 20px;
+	height: 20px;
+}
+
+#hash {
+	width: 400px;
+}
+
+#solver {
+	border-collapse: collapse;
+	border: 1px gray;
+}
+
+#solver tr {
+	cursor: pointer;
+}
+
+#solver td {
+	border: 1px solid gray;
+}
+
+.highlight {
+	background: green;
+	color: white;
+}
+
+
+		</style>
+	</head>
+	<body>
+		<form>
+		<input type="radio" name="mode" id="playMode" checked><label for="playMode">Play</label>
+		<input type="radio" name="mode" id="changeTarget"><label for="playMode">Change Target</label>
+		<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Bucket</label>
+		<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Color</label>
+		<input type="radio" name="mode" id="changePosition"><label for="playMode">Change Position</label>
+		</form>
+
+		Level hash: <input id="hash"> <button onclick="loadHash()">load</button> <button onclick="solveBoard()">solve</button>
+		<table>
+			<tr>
+				<td>
+					<table id="table">
+					</table>
+				</td>
+				<td>
+					
+					<table id="solver">
+					</table>
+				</td>
+			</tr>
+		</table>
+	<script>
+		Board = function() {
+			this.rowCount = 3;
+			this.columnCount = 3;
+			this.cubeRow = 0;
+			this.cubeColumn = 0;
+			this.cubeSides = [0,0,0,0,0,0];
+			this.moves = 0;
+
+			this.Init();
+		};
+
+		Board.colors = [
+			{name: 'white', madeBy: [0]},
+			{name: 'blue', madeBy: [1]},
+			{name: 'yellow', madeBy: [2]},
+			{name: 'green', madeBy: [1,2]},
+			{name: 'red', madeBy: [4]},
+			{name: 'purple', madeBy: [4,1]},
+			{name: 'orange', madeBy: [4,2]},
+		];
+
+		Board.prototype.Init = function(cellValues) {
+			this.cells = [];
+
+			for (var row=0, nCell=0; row < this.rowCount; ++row) {
+				var currentRow = [];
+
+				for (var column=0; column < this.columnCount; ++column, ++nCell) {
+					var cellValue = cellValues ? cellValues[nCell] : undefined;
+					var currentCell = new Cell(cellValue);
+
+					currentRow.push(new Cell());
+				}
+
+				this.cells.push(currentRow);
+			}
+		};
+
+		Board.prototype.getTransform = function(deltaRow, deltaColumn) 
+		{
+			if (deltaRow == 0 && deltaColumn == 1)
+				return [0,4,2,5,3,1];
+
+			if (deltaRow == 0 && deltaColumn == -1)
+				return [0,5,2,4,1,3];
+
+			if (deltaRow == 1 && deltaColumn == 0)
+				return [1,2,3,0,4,5];
+
+			if (deltaRow == -1 && deltaColumn == 0)
+				return [3,0,1,2,4,5];
+
+			return undefined;
+		}
+
+		Board.prototype.getCubeCell = function() {
+			return this.cells[this.cubeRow][this.cubeColumn].value;
+		}
+
+
+		Board.prototype.moveCube = function(newRow, newColumn, showGameOver) {
+			var deltaRow = newRow - this.cubeRow;
+			var deltaColumn = newColumn - this.cubeColumn;
+
+			var transform = this.getTransform(deltaRow, deltaColumn);
+
+			if (transform) {
+				this.cubeColumn = newColumn;
+				this.cubeRow = newRow;
+
+				var oldSides = this.cubeSides.slice();
+
+				for (var side=0; side < 6; ++side) {
+					this.cubeSides[side] = oldSides[transform[side]];
+				};
+
+				var cubeCell = this.getCubeCell();
+
+				var bottomSide = this.cubeSides[1];
+
+				if (cubeCell.paint > 0) {
+					bottomSide += cubeCell.paint;
+				}
+
+				++this.moves;
+
+				if (bottomSide != 0) {
+					if  (!Board.colors[cubeCell.target].madeBy.includes(bottomSide)) {
+						if (showGameOver)
+							alert("game over");
+
+						return false;
+					} else {
+						if (!Board.colors[cubeCell.color].madeBy.includes(bottomSide)) {
+							cubeCell.color += bottomSide;
+						}
+
+						this.cubeSides[1] = bottomSide;
+						cubeCell.paint = 0;
+
+					}
+				}
+			} 
+
+
+			return transform != undefined;
+		}
+
+		Board.prototype.getHash = function() {
+			result = "";
+			
+			//serialize cube position
+			result += this.cubeRow;
+			result += this.cubeColumn;
+
+			//serialize cube sides
+			for (var side=0; side < this.cubeSides.length; ++side) {
+				result += this.cubeSides[side];
+			}
+
+			//serialize board colors
+			for (var row=0, nCell=0; row < this.rowCount; ++row) {
+				for (var column=0; column < this.columnCount; ++column, ++nCell) {
+					var cell = this.cells[row][column].value;
+
+					result += cell.color;
+					result += cell.paint;
+					result += cell.target;
+				}
+			}
+
+
+			return result;
+		}
+
+
+		
+
+		Board.prototype.restoreFromHash = function(hash) {
+			var currentToken = 0;
+
+			//deserialize cube position
+			this.cubeRow = +hash[currentToken++];
+			this.cubeColumn = +hash[currentToken++];
+
+			//deserialize cube sides
+			for (var side=0; side < 6; ++side) {
+				this.cubeSides[side] = +hash[currentToken++];
+			}
+
+		    //deserialize board colors
+			for (var row=0, nCell=0; row < this.rowCount; ++row) {
+				for (var column=0; column < this.columnCount; ++column, ++nCell) {
+					this.cells[row][column].value.color = +hash[currentToken++];
+					this.cells[row][column].value.paint = +hash[currentToken++];
+					this.cells[row][column].value.target = +hash[currentToken++];
+						
+				}
+			}	
+		}
+
+		Board.prototype.isVictory = function() {
+			for (var row=0, nCell=0; row < this.rowCount; ++row) {
+				for (var column=0; column < this.columnCount; ++column, ++nCell) {
+					var cell = this.cells[row][column].value;
+
+					if (cell.color != cell.target)
+						return false;
+				}
+			}	
+
+			return true;
+		}
+
+		Cell = function(cellValue) {
+			this.value = cellValue;
+
+			if (!this.value) {
+				this.value = {
+					color: 0,
+					target: 1,
+					paint: 0
+				}
+			}
+		};
+
+		Board.prototype.getValidMoves = function() {
+			var currentHash = this.getHash();
+
+			var directions = [[1,0], [-1,0], [0,1], [0,-1]];
+			var letters = ["&#8598;","&#8600;","&#8599;","&#8601;"];
+
+			var result = [];
+
+			for (var direction = 0; direction < directions.length; ++direction) {
+				var newRow = this.cubeRow + directions[direction][0];
+				var newColumn = this.cubeColumn + directions[direction][1];
+				
+				if (newRow >= 0 && newRow < this.rowCount && newColumn >= 0 && newColumn < this.columnCount) {
+					if (this.moveCube(newRow, newColumn)) {
+						result.push({hash: this.getHash(), move: letters[direction], from: currentHash});
+					}
+				}
+
+				this.restoreFromHash(currentHash);
+			}
+
+			return result;
+		}
+
+		Board.prototype.solve = function(c) {
+			
+			var currentHash = this.getHash();
+
+			this.processedHashes = {};
+			this.processingHashes = {};
+
+			this.processingHashes[currentHash] = {hash: currentHash};
+			this.processedHashes[currentHash] = {hash: currentHash};
+
+
+			
+			var keys = Object.keys(this.processingHashes);
+
+			var processed = 0;
+
+			while (keys.length > 0) {
+				this.futureHashes = {};
+
+				for (var nHash = 0; nHash<keys.length; ++nHash) {
+					var processingHash = keys[nHash];
+
+					if (processed++ % 10000 == 0) {
+						console.log("processed " + processed + " hashes");
+					}
+
+					this.restoreFromHash(processingHash);
+
+					if (this.isVictory()) {
+						alert("found solution!");
+						board.restoreFromHash(currentHash);
+						return this.processingHashes[processingHash];
+					}
+
+					var validMoves = this.getValidMoves();
+
+					for (var nValidMove = 0; nValidMove < validMoves.length; ++nValidMove) {
+						var validMove = validMoves[nValidMove];
+
+						if (!this.processedHashes[validMove.hash]) {
+							this.processedHashes[validMove.hash] = validMove;
+							this.futureHashes[validMove.hash] = validMove;
+						}
+					}
+
+				} 
+
+				this.processingHashes = this.futureHashes;
+				keys = Object.keys(this.processingHashes);
+			}
+
+			return false;
+		}
+
+
+		Board.prototype.updateTable = function(idTable) {
+			var result = "";
+
+			var $hash = document.getElementById('hash');
+			$hash.value = board.getHash();
+
+			for (var row=0, nCell=0; row < this.rowCount; ++row) {
+				result += "<tr>";
+
+				for (var column=0; column < this.columnCount; ++column, ++nCell) {
+					var cell = this.cells[row][column].value;
+
+					result += "<td  style = 'background: " + Board.colors[cell.color].name + "; border-color: " + Board.colors[cell.target].name + "' onclick='onClickedSquare(" + row + "," + column + ")' >";
+					if (cell.paint > 0) {
+						result += "<div class='paint' style = 'background: " + Board.colors[cell.paint].name + "'></div>";
+					}
+
+					if (column == this.cubeColumn && row == this.cubeRow) {
+						result += "<div class='cube' >";
+						result += "<div class='top' style='background:" + Board.colors[this.cubeSides[3]].name + "' ></div>";
+						result += "<div class='left' style='background:" + Board.colors[this.cubeSides[5]].name +"' ></div>";
+						result += "<div class='right' style='background:" + Board.colors[this.cubeSides[2]].name +"'   ></div>";
+						result += "</div>";
+						
+
+					}
+
+					result += "</td>";
+
+
+
+				}
+
+				result += "</tr>";
+			}
+
+			if (this.isVictory()) {
+				alert('Victory!');
+			}
+
+			document.getElementById(idTable).innerHTML = result;
+		}
+
+		Board.prototype.updateSolver = function(solution) {
+			var result = "";
+
+			var $solver = document.getElementById('solver');
+
+			var lastStep = {move: '&#9872;', from: solution.hash};
+
+			if (!board.solution) {
+				board.solution = [];
+
+				if (solution) {
+					do {
+						board.solution.push(solution);
+						solution = this.processedHashes[solution.from];
+					} while (solution.from);
+				}
+
+				
+
+				board.solution.reverse();
+				
+				board.solution.push(lastStep);
+			}
+
+
+			var currentHash = board.getHash();
+
+			
+			result = "<tr><th>Step</th><th>Direction</th><th>Hash</th></tr>" + result;
+
+			for (var nStep=0; nStep < board.solution.length; ++nStep) {
+				var step = board.solution[nStep];
+
+				var highlighter = (currentHash == step.from) ? 'class="highlight"' : '';
+
+
+				result += "<tr  onclick=\"loadHash2('" + step.from + "');  \" " + highlighter + "><td>" + nStep + "</td><td>" + step.move + "</td><td>" + step.from + "</td></tr>";
+			}			 
+
+			result += "<tr><td colspan='3'>Click any step to view it</td></tr>"
+			
+			$solver.innerHTML = result;
+		};
+
+		function loadHash2(hash) {
+			board.restoreFromHash(hash);
+			board.updateTable('table'); 
+			board.updateSolver(board.solution);
+		}
+
+		var onClickedSquare = function(row, column) {
+
+			if (document.forms[0].mode[0].checked) {
+				board.moveCube(row, column);
+			} else if (document.forms[0].mode[1].checked) {
+				board.cells[row][column].value.target = (board.cells[row][column].value.target + 1) % Board.colors.length;
+			} else if (document.forms[0].mode[2].checked) {
+				board.cells[row][column].value.paint = (board.cells[row][column].value.paint + 1) % Board.colors.length;
+			} else if (document.forms[0].mode[3].checked) {
+				board.cells[row][column].value.color = (board.cells[row][column].value.color + 1) % Board.colors.length;
+			}else if (document.forms[0].mode[4].checked) {
+				board.cubeRow = row;
+				board.cubeColumn = column;
+			}
+
+			board.updateTable('table');
+			
+		}
+
+		var solveBoard = function() {
+			board.solution = undefined;
+			var solution = board.solve();
+
+			board.updateSolver(solution);
+		}
+
+		var loadHash = function() {
+			var $hash = document.getElementById('hash');
+			board.restoreFromHash(hash.value);
+			board.updateTable('table');
+		}
+
+		var board = new Board();
+		board.restoreFromHash("02000000022006006002006006046006011");
+
+		board.updateTable('table');
+	</script>
+	</body>
+</html>
