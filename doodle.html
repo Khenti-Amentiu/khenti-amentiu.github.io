@@ -1,6 +1,10 @@
 <html> 
 	<head>
 		<style>
+			body {
+				width: 1400px;
+
+			}
 			#table {
 				text-align: center;
 				transform: rotate(-45deg);
@@ -15,11 +19,6 @@
 				position: relative;
 				
 			}
-
-			td.targetblue {
-				border-color: blue;
-			}
-
 			.cube {
 				transform-style: preserve-3d;
 
@@ -29,70 +28,65 @@
 				top: -50px; left: 50px;
 			}
 
+			.cube div {
+				position: absolute;
+				width: 100px;
+				height: 100px;
+				border: 1px black solid;
 
+			}
 
+			.top {
+				transform: rotateY(-270deg) translateX(50px);
+				transform-origin: top right;
+			}
 
-.top {
-	transform: rotateY(-270deg) translateX(50px);
-	transform-origin: top right;
-}
+			.right {
+				transform: rotateX(90deg) translateY(50px);
+				transform-origin: bottom center;
+			}
+			.left {
+				transform: translateZ(50px);
+			}
 
-.right {
-	transform: rotateX(90deg) translateY(50px);
-	transform-origin: bottom center;
-}
-.left {
-	transform: translateZ(50px);
-}
+			.paint {
+				position: absolute;
+				top: 20px;
+				left: 20px;
+				width: 20px;
+				height: 20px;
+			}
 
-.cube div {
-	position: absolute;
-	width: 100px;
-	height: 100px;
-	border: 1px black solid;
+			#hash {
+				width: 400px;
+			}
 
-}
+			#solver {
+				border-collapse: collapse;
+				border: 1px gray;
+			}
 
-.paint {
-	position: absolute;
-	top: 20px;
-	left: 20px;
-	width: 20px;
-	height: 20px;
-}
+			#solver tr {
+				cursor: pointer;
+			}
 
-#hash {
-	width: 400px;
-}
+			#solver td {
+				border: 1px solid gray;
+			}
 
-#solver {
-	border-collapse: collapse;
-	border: 1px gray;
-}
-
-#solver tr {
-	cursor: pointer;
-}
-
-#solver td {
-	border: 1px solid gray;
-}
-
-.highlight {
-	background: green;
-	color: white;
-}
-
-
+			.highlight {
+				background: green;
+				color: white;
+			}
 		</style>
 	</head>
 	<body>
 		<form>
-		<input type="radio" name="mode" id="playMode" checked><label for="playMode">Play</label>
-		<input type="radio" name="mode" id="changeTarget"><label for="playMode">Change Target</label>
-		<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Bucket</label>
-		<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Color</label>
-		<input type="radio" name="mode" id="changePosition"><label for="playMode">Change Position</label>
+			<input type="radio" name="mode" id="playMode" checked><label for="playMode">Play</label>
+			<input type="radio" name="mode" id="changeTarget"><label for="playMode">Change Target</label>
+			<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Bucket</label>
+			<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Color</label>
+			<input type="radio" name="mode" id="changePosition"><label for="playMode">Change Position</label>
 		</form>
 
 		Level hash: <input id="hash"> <button onclick="loadHash()">load</button> <button onclick="solveBoard()">solve</button>
@@ -102,8 +96,7 @@
 					<table id="table">
 					</table>
 				</td>
-				<td>
-					
+				<td>	
 					<table id="solver">
 					</table>
 				</td>
@@ -129,6 +122,7 @@
 			{name: 'red', madeBy: [4]},
 			{name: 'purple', madeBy: [4,1]},
 			{name: 'orange', madeBy: [4,2]},
+			{name: 'brown', madeBy: [1,2,4]},
 		];
 
 		Board.prototype.Init = function(cellValues) {
@@ -190,26 +184,23 @@
 
 				var bottomSide = this.cubeSides[1];
 
-				if (cubeCell.paint > 0) {
+				if (cubeCell.paint > 0 && !Board.colors[bottomSide].madeBy.includes(cubeCell.paint)) {
 					bottomSide += cubeCell.paint;
 				}
 
-				++this.moves;
-
 				if (bottomSide != 0) {
-					if  (!Board.colors[cubeCell.target].madeBy.includes(bottomSide)) {
+					if  (cubeCell.target != bottomSide && !Board.colors[cubeCell.target].madeBy.includes(bottomSide)) {
 						if (showGameOver)
 							alert("game over");
 
 						return false;
 					} else {
 						if (!Board.colors[cubeCell.color].madeBy.includes(bottomSide)) {
-							cubeCell.color += bottomSide;
+							cubeCell.color = bottomSide;
 						}
 
 						this.cubeSides[1] = bottomSide;
 						cubeCell.paint = 0;
-
 					}
 				}
 			} 
@@ -241,12 +232,8 @@
 				}
 			}
 
-
 			return result;
 		}
-
-
-		
 
 		Board.prototype.restoreFromHash = function(hash) {
 			var currentToken = 0;
@@ -300,7 +287,7 @@
 			var currentHash = this.getHash();
 
 			var directions = [[1,0], [-1,0], [0,1], [0,-1]];
-			var letters = ["&#8598;","&#8600;","&#8599;","&#8601;"];
+			var letters = ["&#8600;","&#8598;","&#8599;","&#8601;"];
 
 			var result = [];
 
@@ -329,8 +316,6 @@
 
 			this.processingHashes[currentHash] = {hash: currentHash};
 			this.processedHashes[currentHash] = {hash: currentHash};
-
-
 			
 			var keys = Object.keys(this.processingHashes);
 
@@ -397,15 +382,10 @@
 						result += "<div class='top' style='background:" + Board.colors[this.cubeSides[3]].name + "' ></div>";
 						result += "<div class='left' style='background:" + Board.colors[this.cubeSides[5]].name +"' ></div>";
 						result += "<div class='right' style='background:" + Board.colors[this.cubeSides[2]].name +"'   ></div>";
-						result += "</div>";
-						
-
+						result += "</div>";			
 					}
 
 					result += "</td>";
-
-
-
 				}
 
 				result += "</tr>";
@@ -435,24 +415,17 @@
 					} while (solution.from);
 				}
 
-				
-
 				board.solution.reverse();
-				
 				board.solution.push(lastStep);
 			}
 
-
 			var currentHash = board.getHash();
-
 			
 			result = "<tr><th>Step</th><th>Direction</th><th>Hash</th></tr>" + result;
 
 			for (var nStep=0; nStep < board.solution.length; ++nStep) {
 				var step = board.solution[nStep];
-
 				var highlighter = (currentHash == step.from) ? 'class="highlight"' : '';
-
 
 				result += "<tr  onclick=\"loadHash2('" + step.from + "');  \" " + highlighter + "><td>" + nStep + "</td><td>" + step.move + "</td><td>" + step.from + "</td></tr>";
 			}			 
@@ -471,7 +444,7 @@
 		var onClickedSquare = function(row, column) {
 
 			if (document.forms[0].mode[0].checked) {
-				board.moveCube(row, column);
+				board.moveCube(row, column, true);
 			} else if (document.forms[0].mode[1].checked) {
 				board.cells[row][column].value.target = (board.cells[row][column].value.target + 1) % Board.colors.length;
 			} else if (document.forms[0].mode[2].checked) {
