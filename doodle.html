@@ -474,7 +474,12 @@
 		}
 
 		var board = new Board();
-		board.restoreFromHash("02000000022006006002006006046006011");
+
+		var hashToLoad = location.href.match(/hash=(\d+)/);
+
+		hashToLoad = hashToLoad ? hashToLoad[1] : "02000000022002006002006006046006011"; //level11
+
+		board.restoreFromHash(hashToLoad);
 
 		board.updateTable('table');
 	</script>
