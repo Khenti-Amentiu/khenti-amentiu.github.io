@@ -1,6 +1,5 @@
 
-<!-- saved from url=(0085)https://khenti-amentiu.github.io/doodle.html?hash=02000000006006006046006006006026006 -->
-<html><script id="tinyhippos-injected">if (window.top.ripple) { window.top.ripple("bootstrap").inject(window, document); }</script><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html><
 	<meta name="viewport" content="width=1600">
 		<style>
 			body {
@@ -157,32 +156,15 @@
 			this.Init();
 		};
 
-		Board.levels = [
-			'02000000001001001001001001011001001',
-			'02000000001002001002022002011002001',    //25
-			'02000000006006006006006006006006006',    //??
-			'02000000001001001003003001023003011',    //27
-			'02000000004004004004001004004004004', 	  //26
-			'02000000004004004026006046002002002',	  //24
-			'02000000045001001004005001004004015',    //28
-			'02000000003003001022013001002003003',    //30
-			'02000000002006002006044006004022004',    //27
-			'02000000044002001004022001004002011',    //17
-			'02000000022002006002006006046006011',    //25
-			'02000000002005001022011001002045001',    //25
-			'02000000004001001026006001011006044',    //23
-			'02000000044004004022013003002002003',    //27
-		];
-
 		Board.colors = [
-			{name: 'white', id: 0},
-			{name: 'blue', id: 1},
-			{name: 'yellow', id: 2},
-			{name: 'green', id: 3},
-			{name: 'red', id: 4},
-			{name: 'purple', id: 5},
-			{name: 'orange', id: 6},
-			{name: 'brown', id: 7},
+			{name: 'white', id: 0, 	hex: "#ffffff"},
+			{name: 'blue', id: 1, 	hex: "#9898fb"},
+			{name: 'yellow', id: 2, hex: "#ecde5a"},
+			{name: 'green', id: 3, 	hex: "#83d290"},
+			{name: 'red', id: 4, 	hex: "#da7169"},
+			{name: 'purple', id: 5,	hex: "#d283c5"},
+			{name: 'orange', id: 6,	hex: "#9898fb"},
+			{name: 'brown', id: 7,	hex: "#9898fb"},
 		];
 
 		Board.prototype.Init = function(cellValues) {
@@ -459,16 +441,16 @@
 				for (var column=0; column < this.columnCount; ++column, ++nCell) {
 					var cell = this.cells[row][column].value;
 
-					result += "<td  style = 'background: " + Board.colors[cell.color].name + "; border-color: " + Board.colors[cell.target].name + "' onclick='onClickedSquare(" + row + "," + column + ")' >";
+					result += "<td  style = 'background: " + Board.colors[cell.color].hex + "; border-color: " + Board.colors[cell.target].hex + "' onclick='onClickedSquare(" + row + "," + column + ")' >";
 					if (cell.paint > 0) {
-						result += "<div class='paint' style = 'background: " + Board.colors[cell.paint].name + "'></div>";
+						result += "<div class='paint' style = 'background: " + Board.colors[cell.paint].hex + "'></div>";
 					}
 
 					if (column == this.cubeColumn && row == this.cubeRow) {
 						result += "<div class='cube' >";
-						result += "<div class='top' style='background:" + Board.colors[this.cubeSides[3]].name + "' ></div>";
-						result += "<div class='left' style='background:" + Board.colors[this.cubeSides[5]].name +"' ></div>";
-						result += "<div class='right' style='background:" + Board.colors[this.cubeSides[2]].name +"'   ></div>";
+						result += "<div class='top' style='background:" + Board.colors[this.cubeSides[3]].hex + "' ></div>";
+						result += "<div class='left' style='background:" + Board.colors[this.cubeSides[5]].hex +"' ></div>";
+						result += "<div class='right' style='background:" + Board.colors[this.cubeSides[2]].hex +"'   ></div>";
 						result += "</div>";			
 					}
 
