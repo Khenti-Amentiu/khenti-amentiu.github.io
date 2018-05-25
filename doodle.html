@@ -1,7 +1,7 @@
-<html> 
-	<head>
-	<meta name="viewport" content="width=device-width">
 
+<!-- saved from url=(0085)https://khenti-amentiu.github.io/doodle.html?hash=02000000006006006046006006006026006 -->
+<html><script id="tinyhippos-injected">if (window.top.ripple) { window.top.ripple("bootstrap").inject(window, document); }</script><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=1600">
 		<style>
 			body {
 				width: 1400px;
@@ -97,35 +97,54 @@
 				padding: 10px;
 			}
 
+            #mainTable {
+                border-collapse: collapse;
+            }
+
+            #solverContainer, #solver {
+                margin: 20px;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            #solver td:first-child {
+                background: grey;
+                color: white;
+            }
+
 		</style>
 	</head>
 	<body>
-		<form>
-		    <p>Click on any square to:<p>
-			<input type="radio" name="mode" id="playMode" checked><label for="playMode">Play</label>
-			<input type="radio" name="mode" id="changeTarget"><label for="playMode">Change Target</label>
-			<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Bucket</label>
-			<input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Color</label>
-			<input type="radio" name="mode" id="changePosition"><label for="playMode">Change Position</label>
+        <table id="mainTable">
+            <tr>
+                <td colspan="2" align="center">
+		            <form>
+		                <p>Click on any square to:</p><p>
+			            <input type="radio" name="mode" id="playMode" checked=""><label for="playMode">Play</label>
+			            <input type="radio" name="mode" id="changeTarget"><label for="playMode">Change Target</label>
+			            <input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Bucket</label>
+			            <input type="radio" name="mode" id="changeBucket"><label for="playMode">Change Color</label>
+			            <input type="radio" name="mode" id="changePosition"><label for="playMode">Change Position</label>
 
 
-		</form>
+		            </p></form>
 
-		Level hash: <input id="hash"> <button  onclick="loadHash()">load</button> <button style="background: green; color: white;" onclick="solveBoard()">solve</button>
+		            Level hash: <input id="hash"> <button onclick="loadHash()">load</button>
 
-		<p>You can use this hash to share the level you make via url, like this <a href="?hash=02000000044002001004022001004002011">level 10, which has a 17 moves solution!</a></p>
-		<table>
+		            <p>You can use this hash to share the level you make via url, like this <a href="https://khenti-amentiu.github.io/doodle.html?hash=02000000044002001004022001004002011">level 10, which has a 17 moves solution!</a></p>
+		        </td>
+            </tr>
 			<tr>
-				<td>
-					<table id="table">
-					</table>
+				<td  valign="top">	
+                    <table id="table"><tbody><tr><td style="background: white; border-color: orange" onclick="onClickedSquare(0,0)"></td><td style="background: white; border-color: orange" onclick="onClickedSquare(0,1)"></td><td style="background: white; border-color: orange" onclick="onClickedSquare(0,2)"><div class="cube"><div class="top" style="background:white"></div><div class="left" style="background:white"></div><div class="right" style="background:white"></div></div></td></tr><tr><td style="background: white; border-color: orange" onclick="onClickedSquare(1,0)"><div class="paint" style="background: red"></div></td><td style="background: white; border-color: orange" onclick="onClickedSquare(1,1)"></td><td style="background: white; border-color: orange" onclick="onClickedSquare(1,2)"></td></tr><tr><td style="background: white; border-color: orange" onclick="onClickedSquare(2,0)"></td><td style="background: white; border-color: orange" onclick="onClickedSquare(2,1)"><div class="paint" style="background: yellow"></div></td><td style="background: white; border-color: orange" onclick="onClickedSquare(2,2)"></td></tr></tbody></table>
 				</td>
-				<td>	
-					<table id="solver">
+                <td id="solverContainer">
+					Solver: Press here to  <button style="background: green; color: white;" onclick="solveBoard()">solve</button>
+					<table id="solver"  valign="top">
 					</table>
 				</td>
 			</tr>
-		</table>
+		</tbody></tabl>
 	<script>
 		Board = function() {
 			this.rowCount = 3;
@@ -332,8 +351,7 @@
 			var currentHash = this.getHash();
 
 			var directions = [[1,0], [-1,0], [0,1], [0,-1]];
-			var letters = ["&#8600;","&#8598;","&#8599;","&#8601;"];
-
+			
 			var result = [];
 
 			for (var direction = 0; direction < directions.length; ++direction) {
@@ -342,7 +360,7 @@
 				
 				if (newRow >= 0 && newRow < this.rowCount && newColumn >= 0 && newColumn < this.columnCount) {
 					if (this.moveCube(newRow, newColumn)) {
-						result.push({hash: this.getHash(), move: letters[direction], from: currentHash});
+						result.push({hash: this.getHash(), move: direction, from: currentHash});
 					}
 				}
 
@@ -352,56 +370,78 @@
 			return result;
 		}
 
+		Board.prototype.solveForNextStep = function () {
+			var startTime = new Date();
+
+		    var length = this.processingHashes.length;
+
+		    if (length == 0) {
+		        document.getElementById("solver").innerHTML = "<tr><td>This puzzle has no possible solution</td></tr>";
+
+		        return false;
+		    }
+
+		    document.getElementById("solver").innerHTML = "<tr><td>Looking for solutions at " + this.nSteps + " steps</td></tr><tr><td><progress /></td></tr>";
+
+
+		    for (; this.nHash < length; ++this.nHash) {
+		        var processingHash = this.processingHashes[this.nHash].hash;
+
+		        if (this.nHash % 1000 == 0 && new Date() - startTime > 10) { //every second 
+		        	document.getElementById("solver").innerHTML = "<tr><td>Looking for solutions at " + this.nSteps + " steps </td></tr>";
+		        	document.getElementById("solver").innerHTML += "<tr><td><progress value='" + this.nHash + "' max='" + length + "' ></progress></td></tr>";
+		        	var _this = this;
+		    		setTimeout(function () { _this.solveForNextStep() }, 1);
+		        	return;
+		        }
+
+		        this.restoreFromHash(processingHash);
+
+		        if (this.isVictory()) {
+		            this.restoreFromHash(this.currentHash);
+		            this.updateSolver(this.processedHashes[processingHash]);
+
+		            return true;
+		        }
+
+		        var validMoves = this.getValidMoves();
+
+		        for (var nValidMove = 0; nValidMove < validMoves.length; ++nValidMove) {
+		            var validMove = validMoves[nValidMove];
+
+		            if (!this.processedHashes[validMove.hash]) {
+		                this.processedHashes[validMove.hash] = validMove;
+		                this.futureHashes.push(validMove);
+		            }
+		        }
+		    }
+
+		    this.processingHashes = this.futureHashes;
+		    this.futureHashes = [];
+		    ++this.nSteps;
+		    this.nHash = 0;
+
+		    var _this = this;
+		    setTimeout(function () { _this.solveForNextStep() }, 100);
+
+		    this.restoreFromHash(this.currentHash);
+		    return false;
+		}
+
+
 		Board.prototype.solve = function(c) {
-			
-			var currentHash = this.getHash();
+			this.currentHash = this.getHash();
 
 			this.processedHashes = {};
-			this.processingHashes = {};
+			this.processingHashes = [];
+			this.futureHashes = [];
 
-			this.processingHashes[currentHash] = {hash: currentHash};
-			this.processedHashes[currentHash] = {hash: currentHash};
-			
-			var keys = Object.keys(this.processingHashes);
+			this.processingHashes.push({ hash: this.currentHash  });
+			this.processedHashes[this.currentHash ] = {hash: this.currentHash };
+			this.nSteps = 0;
+			this.nHash = 0;
 
-			var processed = 0;
-
-			while (keys.length > 0) {
-				this.futureHashes = {};
-
-				for (var nHash = 0; nHash<keys.length; ++nHash) {
-					var processingHash = keys[nHash];
-
-					if (processed++ % 10000 == 0) {
-						console.log("processed " + processed + " hashes");
-					}
-
-					this.restoreFromHash(processingHash);
-
-					if (this.isVictory()) {
-						alert("found solution!");
-						board.restoreFromHash(currentHash);
-						return this.processingHashes[processingHash];
-					}
-
-					var validMoves = this.getValidMoves();
-
-					for (var nValidMove = 0; nValidMove < validMoves.length; ++nValidMove) {
-						var validMove = validMoves[nValidMove];
-
-						if (!this.processedHashes[validMove.hash]) {
-							this.processedHashes[validMove.hash] = validMove;
-							this.futureHashes[validMove.hash] = validMove;
-						}
-					}
-
-				} 
-
-				this.processingHashes = this.futureHashes;
-				keys = Object.keys(this.processingHashes);
-			}
-
-			alert('This puzzle has no possible solution');
+			var solution = this.solveForNextStep();
 
 			return false;
 		}
@@ -450,7 +490,7 @@
 
 			var $solver = document.getElementById('solver');
 
-			var lastStep = {move: '&#9872;', from: solution.hash};
+			var lastStep = {move: 4, from: solution.hash};
 
 			if (!board.solution) {
 				board.solution = [];
@@ -459,7 +499,7 @@
 					do {
 						board.solution.push(solution);
 						solution = this.processedHashes[solution.from];
-					} while (solution.from);
+					} while (solution && solution.from);
 				}
 
 				board.solution.reverse();
@@ -470,11 +510,13 @@
 			
 			result = "<tr><th>Step</th><th>Direction</th><th>Hash</th></tr>" + result;
 
+			var directionSymbols = ["&#8600;", "&#8598;", "&#8599;", "&#8601;", '&#9872;'];
+
 			for (var nStep=0; nStep < board.solution.length; ++nStep) {
 				var step = board.solution[nStep];
 				var highlighter = (currentHash == step.from) ? 'class="highlight"' : '';
 
-				result += "<tr  onclick=\"loadHash2('" + step.from + "');  \" " + highlighter + "><td>" + nStep + "</td><td>" + step.move + "</td><td>" + step.from + "</td></tr>";
+				result += "<tr  onclick=\"loadHash2('" + step.from + "');  \" " + highlighter + "><td>" + nStep + "</td><td>" + directionSymbols[step.move] + "</td><td>" + step.from + "</td></tr>";
 			}			 
 
 			result += "<tr><th colspan='3'>Click on any step to view it, or use the arrow key</th></tr>"
@@ -509,9 +551,7 @@
 
 		var solveBoard = function() {
 			board.solution = undefined;
-			var solution = board.solve();
-
-			board.updateSolver(solution);
+			board.solve();
 		}
 
 		var loadHash = function() {
@@ -534,17 +574,20 @@
 			}
 		}
 
-		window.onkeyup = function(e) {
+		window.onkeydown = function (e) {
+		    event.preventDefault();
 		   var solverHashId = getSolutionHashIndexOf(board.getHash());
 
 	       if (solverHashId !== undefined) {
 			   var key = e.keyCode ? e.keyCode : e.which;
 
 			   if (key == 38 && solverHashId > 0) {
-			   		loadHash2(board.solution[solverHashId-1].from);
+			       loadHash2(board.solution[solverHashId - 1].from);
+			       event.preventDefault();
 			   }else if (key == 40 && solverHashId < board.solution.length-1) {
 			       loadHash2(board.solution[solverHashId].hash);
-			   }
+			       event.preventDefault();
+               }
 			}
 		}
 
@@ -558,5 +601,5 @@
 
 		board.updateTable('table');
 	</script>
-	</body>
-</html>
+	
+</body></html>
